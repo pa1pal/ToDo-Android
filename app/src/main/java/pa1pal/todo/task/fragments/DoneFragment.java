@@ -79,7 +79,6 @@ public class DoneFragment extends Fragment {
             }
         });
 
-        donerecyclerView.setOn
         return rootview;
     }
 

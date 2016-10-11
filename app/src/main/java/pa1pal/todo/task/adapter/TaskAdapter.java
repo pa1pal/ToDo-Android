@@ -20,7 +20,7 @@ import pa1pal.todo.task.pojo.TodoPojo;
  * Created by pa1pal on 10/10/16.
  */
 
-public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.MyViewHolder>{
+public class TaskAdapter extends SelectableAdapter<TaskAdapter.MyViewHolder>{
 
     private List<Datum> mTaskList;
     private Context mContext;
