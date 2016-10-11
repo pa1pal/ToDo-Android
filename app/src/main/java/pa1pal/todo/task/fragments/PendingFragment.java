@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.view.ActionMode;
@@ -40,6 +41,8 @@ public class PendingFragment extends Fragment implements RecyclerItemClickListen
     private TodoPojo mTodo;
 
     public List<Datum> mPendingTaskList;
+    public List<Datum> tempList;
+
 
     public Datum newdata, d;
 
@@ -65,6 +68,7 @@ public class PendingFragment extends Fragment implements RecyclerItemClickListen
         mTodo = new TodoPojo();
         d = new Datum();
         mPendingTaskList = new ArrayList<Datum>();
+        tempList = new ArrayList<Datum>();
     }
 
     @Override
@@ -180,17 +184,27 @@ public class PendingFragment extends Fragment implements RecyclerItemClickListen
 
     @Override
     public void onItemClick(View childView, final int position) {
+        //final Datum tempD = new Datum();
+        //String name;
         AlertDialog.Builder alert = new AlertDialog.Builder(getContext());
         alert.setTitle(getResources().getString(R.string.delete));
         alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
+                d = mPendingTaskList.get(position);
                 mPendingTaskList.remove(position);
                         //mPendingTaskList.add(d);
-                Toast.makeText(getActivity(), "Removed from the list", Toast.LENGTH_LONG).show();
+                Toast.makeText(getActivity(), "Removed from the list", Toast.LENGTH_SHORT).show();
                    // mPendingTaskList.add(d);
                     todoAdapter.notifyDataSetChanged();
 
-
+                Snackbar.make(getView(), "Do you want the item back?", Snackbar.LENGTH_LONG).setAction("Undo", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        mPendingTaskList.add(d);
+                        todoAdapter.notifyDataSetChanged();
+                        Toast.makeText(getActivity(), "Operation Undo, Item added back", Toast.LENGTH_SHORT).show();
+                    }
+                }).show();
             }
         });
 
@@ -262,6 +276,15 @@ public class PendingFragment extends Fragment implements RecyclerItemClickListen
                         todoAdapter.notifyDataSetChanged();
                     }
                     mode.finish();
+
+                    Snackbar.make(getView(), R.string.undo_delete, Snackbar.LENGTH_LONG).setAction("Undo", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            mPendingTaskList.addAll(tempList);
+                            todoAdapter.notifyDataSetChanged();
+                            Toast.makeText(getActivity(), R.string.items_back, Toast.LENGTH_SHORT).show();
+                        }
+                    }).show();
 
                 default:
                     return false;

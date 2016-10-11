@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.view.ActionMode;
@@ -37,11 +38,11 @@ public class DoneFragment extends Fragment implements RecyclerItemClickListener.
 
     private ApiManager apiManager;
     private TodoPojo mTodo;
-    public List<Datum> mDoneTaskList;
+    public List<Datum> mDoneTaskList, tempList;
     TaskAdapter donetodoAdapter;
     RecyclerView todoList;
     SwipeRefreshLayout swipeRefreshLayout;
-
+    Datum d;
     private ActionModeCallback actionModeCallback;
     private ActionMode actionMode;
     @BindView(R.id.done_todo_list)
@@ -54,8 +55,10 @@ public class DoneFragment extends Fragment implements RecyclerItemClickListener.
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         actionModeCallback = new ActionModeCallback();
+        d = new Datum();
         mTodo = new TodoPojo();
         mDoneTaskList = new ArrayList<Datum>();
+        tempList = new ArrayList<Datum>();
     }
 
     @Override
@@ -148,7 +151,6 @@ public class DoneFragment extends Fragment implements RecyclerItemClickListener.
                 if (title.length() == 1)
                     return;
                 else{
-                    Datum d = new Datum();
                     d.setName(title);
                     if (state.isChecked()){
                         mDoneTaskList.add(d);
@@ -192,10 +194,36 @@ public class DoneFragment extends Fragment implements RecyclerItemClickListener.
     }
 
     @Override
-    public void onItemClick(View childView, int position) {
-        if (actionMode != null) {
-            toggleSelection(position);
-        }
+    public void onItemClick(View childView, final int position) {
+        AlertDialog.Builder alert = new AlertDialog.Builder(getContext());
+        alert.setTitle(getResources().getString(R.string.delete));
+        alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                d = mDoneTaskList.get(position);
+                mDoneTaskList.remove(position);
+                //mDoneTaskList.add(d);
+                Toast.makeText(getActivity(), "Removed from the list", Toast.LENGTH_SHORT).show();
+                // mDoneTaskList.add(d);
+                donetodoAdapter.notifyDataSetChanged();
+
+                Snackbar.make(getView(), "Do you want the item back?", Snackbar.LENGTH_LONG).setAction("Undo", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        mDoneTaskList.add(d);
+                        donetodoAdapter.notifyDataSetChanged();
+                        Toast.makeText(getActivity(), "Operation Undo, Item added back", Toast.LENGTH_SHORT).show();
+                    }
+                }).show();
+            }
+        });
+
+        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+            }
+        });
+
+        alert.show();
+
     }
 
     @Override
@@ -232,11 +260,20 @@ public class DoneFragment extends Fragment implements RecyclerItemClickListener.
             switch (item.getItemId()) {
                 case R.id.delete:
                     for (Integer position : donetodoAdapter.getSelectedItems()) {
+                        tempList.add(mDoneTaskList.get(position));
                         mDoneTaskList.remove(mDoneTaskList.get(position));
                         donetodoAdapter.notifyDataSetChanged();
                     }
                     mode.finish();
 
+                    Snackbar.make(getView(), R.string.undo_delete, Snackbar.LENGTH_LONG).setAction("Undo", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                                mDoneTaskList.addAll(tempList);
+                                donetodoAdapter.notifyDataSetChanged();
+                            Toast.makeText(getActivity(), R.string.items_back, Toast.LENGTH_SHORT).show();
+                        }
+                    }).show();
                 default:
                     return false;
             }

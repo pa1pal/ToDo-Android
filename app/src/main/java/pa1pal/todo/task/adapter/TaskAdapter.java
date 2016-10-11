@@ -45,8 +45,7 @@ public class TaskAdapter extends SelectableAdapter<TaskAdapter.MyViewHolder> {
             holder.todoDescription.setText(mTaskList.get(position).getName());
         }
         else
-            holder.todoDescription.setText("Reviews not available");
-
+            holder.todoDescription.setText("Not available");
     }
 
     @Override

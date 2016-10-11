@@ -9,4 +9,6 @@
     <string name="sample_todo">Sample Todo</string>
     <string name="loading">Loading ...</string>
     <string name="delete">delete</string>
+    <string name="undo_delete">Do you want the item back?</string>
+    <string name="items_back">Operation Undo, Items added back</string>
 </resources>
