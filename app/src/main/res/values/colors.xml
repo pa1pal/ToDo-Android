@@ -2,7 +2,7 @@
 <resources>
     <color name="colorPrimary">#009688</color>
     <color name="colorPrimaryDark">#00796B</color>
-    <color name="colorAccent">#FFEB3B</color>
+    <color name="colorAccent">#94d0d7</color>
     <color name="lightPrimary">#FFEB3B</color>
     <color name="doneRecyclerviewBackground">#cfd5ec</color>
     <color name="pendingRecyclerViewBackground">#f1d1d2</color>

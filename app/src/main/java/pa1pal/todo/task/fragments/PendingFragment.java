@@ -1,6 +1,8 @@
 package pa1pal.todo.task.fragments;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -12,7 +14,9 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,10 +35,17 @@ import retrofit2.Response;
 
 public class PendingFragment extends Fragment {
     private ApiManager apiManager;
+
     private TodoPojo mTodo;
-    private List<Datum> mPendingTaskList;
+
+    public List<Datum> mPendingTaskList;
+
+    public Datum newdata, d;
+
     TaskAdapter todoAdapter;
+
     RecyclerView todoList;
+
     SwipeRefreshLayout swipeRefreshLayout;
 
     @BindView(R.id.pending_todo_list)
@@ -49,6 +60,7 @@ public class PendingFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         mTodo = new TodoPojo();
+        d = new Datum();
         mPendingTaskList = new ArrayList<Datum>();
     }
 
@@ -92,17 +104,25 @@ public class PendingFragment extends Fragment {
         loadTodo();
     }
 
-    public void loadTodo(){
+    public void loadTodo() {
+        final ProgressDialog progressDialog = new ProgressDialog(getContext());
+        progressDialog.setIndeterminate(true);
+        progressDialog.setMessage(getString(R.string.loading));
+        progressDialog.show();
+
         apiManager = new ApiManager();
         Call<TodoPojo> reviewsCall = apiManager.getApi().getTodo();
         reviewsCall.enqueue(new Callback<TodoPojo>() {
             @Override
             public void onResponse(Call<TodoPojo> call, Response<TodoPojo> response) {
-                if(response.isSuccessful()){
+                if (progressDialog.isShowing())
+                    progressDialog.dismiss();
+
+                if (response.isSuccessful()) {
                     mTodo = response.body();
                     Collection<Datum> data = mTodo.getData();
-                    for (int i=0; i<data.size(); i++){
-                        if (mTodo.getData().get(i).getState() == 0){
+                    for (int i = 0; i < data.size(); i++) {
+                        if (mTodo.getData().get(i).getState() == 0) {
                             mPendingTaskList.add(mTodo.getData().get(i));
                         }
                     }
@@ -114,7 +134,8 @@ public class PendingFragment extends Fragment {
 
             @Override
             public void onFailure(Call<TodoPojo> call, Throwable t) {
-
+                if (progressDialog.isShowing())
+                    progressDialog.dismiss();
             }
 
         });
@@ -127,25 +148,33 @@ public class PendingFragment extends Fragment {
         final LayoutInflater inflater = getActivity().getLayoutInflater();
         final View view = inflater.inflate(R.layout.dialog_input, null);
         final EditText input = (EditText) view.findViewById(R.id.text);
+        final CheckBox state = (CheckBox) view.findViewById(R.id.stateCheckbox);
         alert.setView(view);
 
         alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
-                    String title = input.getText().toString();
-                    if (title.length() == 0)
-                        return;
-                else{
-                        Datum d = new Datum();
-                        d.setName(title);
+                String title = input.getText().toString();
+                if (title.length() == 0)
+                    return;
+                else {
+                    d.setName(title);
+                    if (state.isChecked()) {
+                        //TODO
+                    } else {
                         mPendingTaskList.add(d);
-                        todoAdapter.notifyDataSetChanged();
+                        Toast.makeText(getActivity(), "Added in the done list", Toast.LENGTH_LONG).show();
+
                     }
+                    mPendingTaskList.add(d);
+                    todoAdapter.notifyDataSetChanged();
+                }
 
             }
         });
 
         alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) { }
+            public void onClick(DialogInterface dialog, int whichButton) {
+            }
         });
 
         alert.show();

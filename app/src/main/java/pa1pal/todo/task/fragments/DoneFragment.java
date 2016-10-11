@@ -1,6 +1,7 @@
 package pa1pal.todo.task.fragments;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -12,7 +13,9 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,8 +36,8 @@ public class DoneFragment extends Fragment {
 
     private ApiManager apiManager;
     private TodoPojo mTodo;
-    private List<Datum> mDoneTaskList;
-    TaskAdapter todoAdapter;
+    public List<Datum> mDoneTaskList;
+    TaskAdapter donetodoAdapter;
     RecyclerView todoList;
     SwipeRefreshLayout swipeRefreshLayout;
 
@@ -61,6 +64,7 @@ public class DoneFragment extends Fragment {
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
+                new DoneFragment();
                 mDoneTaskList.clear();
                 loadTodo();
                 swipeRefreshLayout.setRefreshing(false);
@@ -75,6 +79,7 @@ public class DoneFragment extends Fragment {
             }
         });
 
+        donerecyclerView.setOn
         return rootview;
     }
 
@@ -87,27 +92,37 @@ public class DoneFragment extends Fragment {
     }
 
     public void loadTodo(){
+        final ProgressDialog progressDialog = new ProgressDialog(getContext());
+        progressDialog.setIndeterminate(true);
+        progressDialog.setMessage(getString(R.string.loading));
+        progressDialog.show();
+
         apiManager = new ApiManager();
         Call<TodoPojo> reviewsCall = apiManager.getApi().getTodo();
         reviewsCall.enqueue(new Callback<TodoPojo>() {
             @Override
             public void onResponse(Call<TodoPojo> call, Response<TodoPojo> response) {
+                if (progressDialog.isShowing())
+                    progressDialog.dismiss();
+
                 if(response.isSuccessful()){
                     mTodo = response.body();
                     Collection<Datum> data = mTodo.getData();
                     for (int i=0; i<data.size(); i++){
-                        if (mTodo.getData().get(i).getState() == 0){
+                        if (mTodo.getData().get(i).getState() == 1){
                             mDoneTaskList.add(mTodo.getData().get(i));
                         }
                     }
-                    todoAdapter = new TaskAdapter(getActivity(), mDoneTaskList);
-                    todoAdapter.notifyDataSetChanged();
-                    donerecyclerView.setAdapter(todoAdapter);
+                    donetodoAdapter = new TaskAdapter(getActivity(), mDoneTaskList);
+                    donetodoAdapter.notifyDataSetChanged();
+                    donerecyclerView.setAdapter(donetodoAdapter);
                 }
             }
 
             @Override
             public void onFailure(Call<TodoPojo> call, Throwable t) {
+                if (progressDialog.isShowing())
+                    progressDialog.dismiss();
 
             }
 
@@ -121,18 +136,24 @@ public class DoneFragment extends Fragment {
         final LayoutInflater inflater = getActivity().getLayoutInflater();
         final View view = inflater.inflate(R.layout.dialog_input, null);
         final EditText input = (EditText) view.findViewById(R.id.text);
+        final CheckBox state = (CheckBox) view.findViewById(R.id.stateCheckbox);
         alert.setView(view);
 
         alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
                 String title = input.getText().toString();
-                if (title.length() == 0)
+                if (title.length() == 1)
                     return;
                 else{
                     Datum d = new Datum();
                     d.setName(title);
-                    mDoneTaskList.add(d);
-                    todoAdapter.notifyDataSetChanged();
+                    if (state.isChecked()){
+                        mDoneTaskList.add(d);
+                        Toast.makeText(getActivity(), "Added in the done list", Toast.LENGTH_LONG).show();
+                    }else {
+                        //TODO
+                    }
+                    donetodoAdapter.notifyDataSetChanged();
                 }
 
             }
