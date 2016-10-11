@@ -62,7 +62,7 @@ public abstract class SelectableAdapter<VH extends RecyclerView.ViewHolder> exte
 	 * @return List of selected items ids
 	 */
 	public List<Integer> getSelectedItems() {
-		List<Integer> items = new ArrayList<> (selectedItems.size());
+		List<Integer> items = new ArrayList<Integer>(selectedItems.size());
 		for (int i = 0; i < selectedItems.size(); ++i) {
 			items.add(selectedItems.keyAt(i));
 		}

@@ -152,7 +152,7 @@ public class PendingFragment extends Fragment implements RecyclerItemClickListen
         final EditText input = (EditText) view.findViewById(R.id.text);
         final CheckBox state = (CheckBox) view.findViewById(R.id.stateCheckbox);
         alert.setView(view);
-
+        d = new Datum();
         alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
                 String title = input.getText().toString();
@@ -160,15 +160,13 @@ public class PendingFragment extends Fragment implements RecyclerItemClickListen
                     return;
                 else {
                     d.setName(title);
-                    if (state.isChecked()) {
-                        //TODO
-                    } else {
+                    if (!state.isChecked()) {
                         mPendingTaskList.add(d);
-                        Toast.makeText(getActivity(), "Added in the done list", Toast.LENGTH_LONG).show();
+                        todoAdapter.notifyDataSetChanged();
+                        Toast.makeText(getActivity(), "Added in the Pending list", Toast.LENGTH_LONG).show();
+                    } else {
 
-                    }
-                    mPendingTaskList.add(d);
-                    todoAdapter.notifyDataSetChanged();
+                         }
                 }
 
             }
@@ -223,6 +221,8 @@ public class PendingFragment extends Fragment implements RecyclerItemClickListen
             actionMode = ((MainActivity) getActivity()).startSupportActionMode
                     (actionModeCallback);
         }
+        Toast.makeText(getActivity(), "Long Click on each item to add. Short click to delete only one item", Toast.LENGTH_SHORT).show();
+
         toggleSelection(position);
     }
 
@@ -271,10 +271,13 @@ public class PendingFragment extends Fragment implements RecyclerItemClickListen
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             switch (item.getItemId()) {
                 case R.id.delete:
+                    List<Datum> removeTasks = new ArrayList<>();
                     for (Integer position : todoAdapter.getSelectedItems()) {
-                        mPendingTaskList.remove(mPendingTaskList.get(position));
-                        todoAdapter.notifyDataSetChanged();
+                        removeTasks.add(mPendingTaskList.get(position));
                     }
+                    tempList = removeTasks;
+                    mPendingTaskList.removeAll(removeTasks);
+                    todoAdapter.notifyDataSetChanged();
                     mode.finish();
 
                     Snackbar.make(getView(), R.string.undo_delete, Snackbar.LENGTH_LONG).setAction("Undo", new View.OnClickListener() {

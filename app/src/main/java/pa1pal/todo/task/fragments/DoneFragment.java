@@ -3,6 +3,7 @@ package pa1pal.todo.task.fragments;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -55,7 +56,6 @@ public class DoneFragment extends Fragment implements RecyclerItemClickListener.
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         actionModeCallback = new ActionModeCallback();
-        d = new Datum();
         mTodo = new TodoPojo();
         mDoneTaskList = new ArrayList<Datum>();
         tempList = new ArrayList<Datum>();
@@ -145,6 +145,7 @@ public class DoneFragment extends Fragment implements RecyclerItemClickListener.
         final CheckBox state = (CheckBox) view.findViewById(R.id.stateCheckbox);
         alert.setView(view);
 
+        d = new Datum();
         alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
                 String title = input.getText().toString();
@@ -154,11 +155,11 @@ public class DoneFragment extends Fragment implements RecyclerItemClickListener.
                     d.setName(title);
                     if (state.isChecked()){
                         mDoneTaskList.add(d);
+                        donetodoAdapter.notifyDataSetChanged();
                         Toast.makeText(getActivity(), "Added in the done list", Toast.LENGTH_LONG).show();
                     }else {
                         //TODO
                     }
-                    donetodoAdapter.notifyDataSetChanged();
                 }
 
             }
@@ -232,6 +233,7 @@ public class DoneFragment extends Fragment implements RecyclerItemClickListener.
             actionMode = ((MainActivity) getActivity()).startSupportActionMode
                     (actionModeCallback);
         }
+        Toast.makeText(getActivity(), "Long Click on each item to add. Short click to delete only one item", Toast.LENGTH_SHORT).show();
         toggleSelection(position);
     }
 
@@ -259,11 +261,13 @@ public class DoneFragment extends Fragment implements RecyclerItemClickListener.
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             switch (item.getItemId()) {
                 case R.id.delete:
+                    List<Datum> removeTasks = new ArrayList<>();
                     for (Integer position : donetodoAdapter.getSelectedItems()) {
-                        tempList.add(mDoneTaskList.get(position));
-                        mDoneTaskList.remove(mDoneTaskList.get(position));
-                        donetodoAdapter.notifyDataSetChanged();
+                        removeTasks.add(mDoneTaskList.get(position));
                     }
+                    tempList = removeTasks;
+                    mDoneTaskList.removeAll(removeTasks);
+                    donetodoAdapter.notifyDataSetChanged();
                     mode.finish();
 
                     Snackbar.make(getView(), R.string.undo_delete, Snackbar.LENGTH_LONG).setAction("Undo", new View.OnClickListener() {

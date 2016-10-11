@@ -12,7 +12,7 @@ public class ApiManager {
     public Api getApi(){
         if (todoService == null) {
             Retrofit retrofit = new Retrofit.Builder()
-                    .baseUrl("https://gist.githubusercontent.com/")
+                    .baseUrl("https://dl.dropboxusercontent.com/")
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
 

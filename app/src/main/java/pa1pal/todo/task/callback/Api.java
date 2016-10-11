@@ -9,6 +9,6 @@ import retrofit2.http.GET;
  */
 
 public interface Api {
-    @GET("pa1pal/39fd29a48bb3592006847286ee6541f4/raw/9729ae0b9018fcf6209a8b77c56375d296cc420f/tasks.json")
+    @GET("u/6890301/tasks.json")
     Call<TodoPojo> getTodo();
 }
