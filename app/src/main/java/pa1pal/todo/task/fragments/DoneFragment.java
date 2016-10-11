@@ -8,11 +8,10 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.view.ActionMode;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -23,16 +22,18 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import pa1pal.todo.task.MainActivity;
 import pa1pal.todo.task.R;
 import pa1pal.todo.task.adapter.TaskAdapter;
 import pa1pal.todo.task.callback.ApiManager;
 import pa1pal.todo.task.pojo.Datum;
 import pa1pal.todo.task.pojo.TodoPojo;
+import pa1pal.todo.task.utils.RecyclerItemClickListener;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class DoneFragment extends Fragment {
+public class DoneFragment extends Fragment implements RecyclerItemClickListener.OnItemClickListener{
 
     private ApiManager apiManager;
     private TodoPojo mTodo;
@@ -41,6 +42,8 @@ public class DoneFragment extends Fragment {
     RecyclerView todoList;
     SwipeRefreshLayout swipeRefreshLayout;
 
+    private ActionModeCallback actionModeCallback;
+    private ActionMode actionMode;
     @BindView(R.id.done_todo_list)
     RecyclerView donerecyclerView;
 
@@ -50,7 +53,7 @@ public class DoneFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        actionModeCallback = new ActionModeCallback();
         mTodo = new TodoPojo();
         mDoneTaskList = new ArrayList<Datum>();
     }
@@ -61,6 +64,7 @@ public class DoneFragment extends Fragment {
         View rootview = inflater.inflate(R.layout.fragment_done, container, false);
         swipeRefreshLayout = (SwipeRefreshLayout) rootview.findViewById(R.id.doneswipelayout);
         ButterKnife.bind(this, rootview);
+        donerecyclerView.addOnItemTouchListener(new RecyclerItemClickListener(getActivity(), this));
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -163,6 +167,86 @@ public class DoneFragment extends Fragment {
         });
 
         alert.show();
+    }
+
+
+
+    /**
+     * Toggle the selection state of an item.
+     * <p>
+     * If the item was the last one in the selection and is unselected, the selection is stopped.
+     * Note that the selection must already be started (actionMode must not be null).
+     *
+     * @param position Position of the item to toggle the selection state
+     */
+    private void toggleSelection(int position) {
+        donetodoAdapter.toggleSelection(position);
+        int count = donetodoAdapter.getSelectedItemCount();
+
+        if (count == 0) {
+            actionMode.finish();
+        } else {
+            actionMode.setTitle(String.valueOf(count));
+            actionMode.invalidate();
+        }
+    }
+
+    @Override
+    public void onItemClick(View childView, int position) {
+        if (actionMode != null) {
+            toggleSelection(position);
+        }
+    }
+
+    @Override
+    public void onItemLongPress(View childView, int position) {
+        if (actionMode == null) {
+            actionMode = ((MainActivity) getActivity()).startSupportActionMode
+                    (actionModeCallback);
+        }
+        toggleSelection(position);
+    }
+
+
+    /**
+     * This ActionModeCallBack Class handling the User Event after the Selection of Clients. Like
+     * Click of Menu Sync Button and finish the ActionMode
+     */
+    private class ActionModeCallback implements ActionMode.Callback {
+        @SuppressWarnings("unused")
+        private final String LOG_TAG = ActionModeCallback.class.getSimpleName();
+
+        @Override
+        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            mode.getMenuInflater().inflate(R.menu.menu_delete, menu);
+            return true;
+        }
+
+        @Override
+        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            return false;
+        }
+
+        @Override
+        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+            switch (item.getItemId()) {
+                case R.id.delete:
+                    for (Integer position : donetodoAdapter.getSelectedItems()) {
+                        mDoneTaskList.remove(mDoneTaskList.get(position));
+                        donetodoAdapter.notifyDataSetChanged();
+                    }
+                    mode.finish();
+
+                default:
+                    return false;
+            }
+        }
+
+        @Override
+        public void onDestroyActionMode(ActionMode mode) {
+            donetodoAdapter.clearSelection();
+            actionMode = null;
+        }
     }
 
 }

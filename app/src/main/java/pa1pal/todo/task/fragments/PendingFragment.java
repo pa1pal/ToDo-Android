@@ -61,6 +61,7 @@ public class PendingFragment extends Fragment implements RecyclerItemClickListen
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        actionModeCallback = new ActionModeCallback();
         mTodo = new TodoPojo();
         d = new Datum();
         mPendingTaskList = new ArrayList<Datum>();
@@ -81,12 +82,7 @@ public class PendingFragment extends Fragment implements RecyclerItemClickListen
             }
         });
 
-        pendingrecyclerView.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View view) {
-                return false;
-            }
-        });
+        pendingrecyclerView.addOnItemTouchListener(new RecyclerItemClickListener(getActivity(), this));
         FloatingActionButton fab = (FloatingActionButton) rootview.findViewById(R.id.addtodofab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -183,7 +179,27 @@ public class PendingFragment extends Fragment implements RecyclerItemClickListen
     }
 
     @Override
-    public void onItemClick(View childView, int position) {
+    public void onItemClick(View childView, final int position) {
+        AlertDialog.Builder alert = new AlertDialog.Builder(getContext());
+        alert.setTitle(getResources().getString(R.string.delete));
+        alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                mPendingTaskList.remove(position);
+                        //mPendingTaskList.add(d);
+                Toast.makeText(getActivity(), "Removed from the list", Toast.LENGTH_LONG).show();
+                   // mPendingTaskList.add(d);
+                    todoAdapter.notifyDataSetChanged();
+
+
+            }
+        });
+
+        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+            }
+        });
+
+        alert.show();
 
     }
 

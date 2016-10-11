@@ -54,6 +54,11 @@ public class TaskAdapter extends SelectableAdapter<TaskAdapter.MyViewHolder> {
         return mTaskList.size();
     }
 
+    @Override
+    public long getItemId(int i) {
+        return 0;
+    }
+
     public class MyViewHolder extends RecyclerView.ViewHolder {
         @BindView(R.id.tododesc) TextView todoDescription;
         public int id, state;
