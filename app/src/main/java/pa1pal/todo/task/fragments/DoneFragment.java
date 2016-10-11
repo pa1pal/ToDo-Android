@@ -8,11 +8,11 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.view.ActionMode;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.support.v7.view.ActionMode;
+import android.view.*;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -24,6 +24,8 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import pa1pal.todo.task.R;
+import pa1pal.todo.task.adapter.Multiselector;
+import pa1pal.todo.task.adapter.OnItemClickListener;
 import pa1pal.todo.task.adapter.TaskAdapter;
 import pa1pal.todo.task.callback.ApiManager;
 import pa1pal.todo.task.pojo.Datum;
@@ -40,6 +42,9 @@ public class DoneFragment extends Fragment {
     TaskAdapter donetodoAdapter;
     RecyclerView todoList;
     SwipeRefreshLayout swipeRefreshLayout;
+    public static final String IS_IN_ACTION_MODE = "IS_IN_ACTION_MODE";
+    private Multiselector multiselector;
+    private ActionMode actionMode;
 
     @BindView(R.id.done_todo_list)
     RecyclerView donerecyclerView;
@@ -53,6 +58,7 @@ public class DoneFragment extends Fragment {
 
         mTodo = new TodoPojo();
         mDoneTaskList = new ArrayList<Datum>();
+        multiselector = new Multiselector(donerecyclerView);
     }
 
     @Override
@@ -79,7 +85,6 @@ public class DoneFragment extends Fragment {
             }
         });
 
-        donerecyclerView.setOn
         return rootview;
     }
 
@@ -113,7 +118,7 @@ public class DoneFragment extends Fragment {
                             mDoneTaskList.add(mTodo.getData().get(i));
                         }
                     }
-                    donetodoAdapter = new TaskAdapter(getActivity(), mDoneTaskList);
+                    donetodoAdapter = new TaskAdapter(getActivity(), mDoneTaskList, multiselector, itemClickListener);
                     donetodoAdapter.notifyDataSetChanged();
                     donerecyclerView.setAdapter(donetodoAdapter);
                 }
@@ -165,5 +170,72 @@ public class DoneFragment extends Fragment {
 
         alert.show();
     }
+
+    private void updateActionModeTitle() {
+        actionMode.setTitle(String.valueOf(multiselector.getCount()));
+    }
+
+    private void startActionMode() {
+        actionMode = startActionMode(actionModeCallback);
+        actionMode = getActivity().startActionMode(actionModeCallback);
+        //actionMode = getActivity().startActionMode((android.view.ActionMode.Callback) actionModeCallback);
+    }
+
+
+    private OnItemClickListener itemClickListener = new OnItemClickListener() {
+        @Override
+        public void onItemClick(View view, int position) {
+            if (isMultiselectionEnabled()) {
+                multiselector.checkView(view, position);
+                updateActionModeTitle();
+            }
+        }
+
+        @Override
+        public void onItemLongPress(View view, int position) {
+            if (!isMultiselectionEnabled()) {
+                startActionMode();
+            }
+            multiselector.checkView(view, position);
+            updateActionModeTitle();
+        }
+    };
+
+
+    private boolean isMultiselectionEnabled() {
+        return actionMode != null;
+    }
+
+    private ActionMode.Callback actionModeCallback = new ActionMode.Callback() {
+        @Override
+        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            mode.getMenuInflater().inflate(R.menu.menu_action_mode, menu);
+            return true;
+        }
+
+        @Override
+        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            return false;
+        }
+
+        @Override
+        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+            switch (item.getItemId()) {
+                case R.id.delete:
+                    Toast.makeText(getActivity(), R.string.items_cleared, Toast.LENGTH_LONG).show();
+                    multiselector.clearAll();
+                    mode.finish();
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        @Override
+        public void onDestroyActionMode(ActionMode mode) {
+            actionMode = null;
+            multiselector.clearAll();
+        }
+    };
 
 }

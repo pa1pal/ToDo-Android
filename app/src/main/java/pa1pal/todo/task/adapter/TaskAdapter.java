@@ -25,11 +25,17 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.MyViewHolder>{
     private List<Datum> mTaskList;
     private Context mContext;
     private TodoPojo todoData;
+    private String[] items;
+    private Multiselector multiselector;
+    private OnItemClickListener listener;
 
 
-    public TaskAdapter(Activity context, List<Datum> results){
+
+    public TaskAdapter(Activity context, List<Datum> results, Multiselector multiselector, OnItemClickListener listener){
         mTaskList = results;
         mContext = context;
+        this.multiselector = multiselector;
+        this.listener = listener;
     }
 
     @Override
@@ -44,9 +50,10 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.MyViewHolder>{
         if (mTaskList.get(position).getName() != null) {
             holder.todoDescription.setText(mTaskList.get(position).getName());
         }
-        else
+        else{
             holder.todoDescription.setText("Reviews not available");
-
+        }
+        holder.itemView.setActivated(multiselector.isChecked(position));
     }
 
     @Override
@@ -54,7 +61,8 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.MyViewHolder>{
         return mTaskList.size();
     }
 
-    public class MyViewHolder extends RecyclerView.ViewHolder {
+    public class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener,
+            View.OnLongClickListener{
         @BindView(R.id.tododesc) TextView todoDescription;
         public int id, state;
 
@@ -62,6 +70,19 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.MyViewHolder>{
             super(view);
 //            ButterKnife.bind(this, view);
             todoDescription = (TextView) view.findViewById(R.id.tododesc);
+            view.setOnClickListener(this);
+            view.setOnLongClickListener(this);
+        }
+
+        @Override
+        public void onClick(View view) {
+            listener.onItemClick(view, getAdapterPosition());
+        }
+
+        @Override
+        public boolean onLongClick(View view) {
+            listener.onItemLongPress(view, getAdapterPosition());
+            return true;
         }
     }
 
